@@ -1,0 +1,32 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        root: [platform, app]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: 1.13.2
+      - name: Format
+        run: tofu fmt -check -recursive
+      - name: Init
+        working-directory: ${{ matrix.root }}
+        run: tofu init -backend=false -input=false -lockfile=readonly
+      - name: Validate
+        working-directory: ${{ matrix.root }}
+        run: tofu validate
+      - name: Test
+        working-directory: ${{ matrix.root }}
+        run: tofu test

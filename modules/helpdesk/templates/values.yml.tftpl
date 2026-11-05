@@ -1,0 +1,110 @@
+# AWS-only components and the GKE Gateway API path are not used on Azure.
+bedrockSubscription:
+  enabled: false
+collector:
+  enabled: false
+gateway:
+  enabled: false
+  internal:
+    enabled: false
+internalIngress:
+  enabled: false
+# ReadWriteMany storage comes from Azure Files NFS, not the in-cluster NFS server.
+nfs-server:
+  enabled: false
+backend:
+%{ if backend_image_tag != "" ~}
+  image:
+    tag: "${backend_image_tag}"
+%{ endif ~}
+  persistence:
+    enabled: true
+    existingClaim: ${backend_claim}
+    accessModes:
+      - ReadWriteMany
+    size: ${backend_size}
+%{ if length(backend_extra_env) > 0 ~}
+  extraEnv:
+%{ for e in backend_extra_env ~}
+    - name: ${e.name}
+      value: ${jsonencode(e.value)}
+%{ endfor ~}
+%{ endif ~}
+config:
+  authFrontendBaseUrl: https://${helpdesk_dns}
+  authAllowedOrigins: https://${helpdesk_dns}
+  infraRegion: ${infra_region}
+  cloudProvider: ""
+  aiStudioIsMasterDisabled: true
+  azureBaseUrl: "${azure_base_url}"
+%{ if auth_super_users != "" ~}
+  authSuperUsers: ${jsonencode(auth_super_users)}
+%{ endif ~}
+%{ if frontend_image_tag != "" ~}
+frontend:
+  image:
+    tag: "${frontend_image_tag}"
+%{ endif ~}
+xterm:
+  enabled: ${xterm_enabled}
+  hostname: https://${helpdesk_xterm_dns}
+ingress:
+  enabled: true
+  className: azure-application-gateway
+  tls: []
+  annotations:
+    # null removes the chart's default AWS ALB annotation.
+    alb.ingress.kubernetes.io/ssl-redirect: null
+    appgw.ingress.kubernetes.io/appgw-ssl-certificate: ${ssl_certificate_name}
+    appgw.ingress.kubernetes.io/ssl-redirect: "true"
+    appgw.ingress.kubernetes.io/backend-protocol: "http"
+    appgw.ingress.kubernetes.io/request-timeout: "300"
+    appgw.ingress.kubernetes.io/connection-draining: "true"
+    appgw.ingress.kubernetes.io/connection-draining-timeout: "60"
+    # The xterm login proxy answers the gateway health probe on / with 401.
+    appgw.ingress.kubernetes.io/health-probe-status-codes: "200-399,401"
+mongodb:
+  enabled: true
+  selfHosted:
+    enabled: false
+mongodbBackup:
+  enabled: ${mongodb_backup_enabled}
+  storage:
+    storageClass: ${backup_storage_class_name}
+secrets:
+  # OAuth client IDs. An empty string ("") disables that provider. Client secrets,
+  # the licensing token and the model API key are passed as sensitive Helm set
+  # values and never rendered into this document.
+  googleClientId: "${google_client_id}"
+  microsoftClientId: "${microsoft_client_id}"
+  microsoftTenantId: "${microsoft_tenant_id}"
+slackBackend:
+  enabled: ${slack_backend_enabled}
+%{ if slack_backend_enabled ~}
+%{ if slack_backend_image_tag != "" ~}
+  image:
+    tag: "${slack_backend_image_tag}"
+%{ endif ~}
+  env:
+    helpdeskDefaultAgent: "${slack_helpdesk_default_agent}"
+    helpdeskDefaultWorkspace: "${slack_helpdesk_default_workspace}"
+  envFromSecret:
+    create: true
+    data:
+      DUPLO_SLACK_APP_PORTALS: ${jsonencode(slack_app_portals)}
+      helpdeskDefaultAgent: "${slack_helpdesk_default_agent}"
+      helpdeskDefaultWorkspace: "${slack_helpdesk_default_workspace}"
+    secretName: slack-managed-portals
+%{ endif ~}
+duploAgent:
+  enabled: true
+  # The agent mounts the backend claim; pointing its own claim there too stops the
+  # chart from creating an unused one.
+  persistence:
+    enabled: true
+    existingClaim: ${backend_claim}
+    accessModes:
+      - ReadWriteMany
+    size: ${backend_size}
+helpdeskMcp:
+  enabled: ${helpdesk_mcp_enabled}

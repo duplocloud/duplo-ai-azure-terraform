@@ -1,0 +1,11 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+!examples/**/*.tfvars.json
+backend.hcl
+*.tfplan
+*.pfx
+.DS_Store
+crash.log
