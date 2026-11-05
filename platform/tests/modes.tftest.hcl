@@ -1,6 +1,34 @@
 # Mock-only: mocked values are random strings, which fail the provider's UUID and
 # resource ID validation where one resource feeds another.
 mock_provider "azurerm" {
+  # Valid-looking IDs for resources whose ID feeds another resource (the provider parses them).
+  mock_resource "azurerm_virtual_network" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/virtualNetworks/acme-vnet" }
+  }
+  mock_resource "azurerm_subnet" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/virtualNetworks/acme-vnet/subnets/snet" }
+  }
+  mock_resource "azurerm_network_security_group" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/networkSecurityGroups/acme-nsg" }
+  }
+  mock_resource "azurerm_nat_gateway" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/natGateways/acme-nat" }
+  }
+  mock_resource "azurerm_public_ip" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/publicIPAddresses/acme-pip" }
+  }
+  mock_resource "azurerm_private_dns_zone" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net" }
+  }
+  mock_resource "azurerm_application_gateway" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/applicationGateways/acme-appgw" }
+  }
+  mock_resource "azurerm_user_assigned_identity" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/acme-id" }
+  }
+  mock_resource "azurerm_storage_account" {
+    defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Storage/storageAccounts/acmefiles" }
+  }
   mock_data "azurerm_client_config" {
     defaults = {
       tenant_id = "11111111-1111-1111-1111-111111111111"
@@ -30,6 +58,20 @@ variables {
   }
   secrets     = { tls_pfx_base64 = "UEZY", tls_pfx_password = "pw" }
   common_tags = { owner = "test" }
+}
+
+# The aks module reads the AGIC identity out of a configured block, which a mock cannot fill; stand in
+# for the module in every run (tofu validate still checks it, and the other runs adopt a cluster).
+override_module {
+  target = module.aks
+  outputs = {
+    cluster_name           = "acme-aks"
+    cluster_id             = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.ContainerService/managedClusters/acme-aks"
+    cluster_endpoint       = "https://acme-aks.hcp.westus2.azmk8s.io:443"
+    cluster_ca_certificate = "Q0E="
+    oidc_issuer_url        = "https://westus2.oic.prod-aks.azure.com/tenant/issuer/"
+    node_resource_group    = "acme-rg-aks-nodes"
+  }
 }
 
 run "greenfield" {

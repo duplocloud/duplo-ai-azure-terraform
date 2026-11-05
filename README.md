@@ -39,7 +39,8 @@ from the platform state with `terraform_remote_state`.
 - OpenTofu 1.10 or later. Terraform 1.10+ also works.
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) and
   [kubelogin](https://azure.github.io/kubelogin/install.html). The `app` root gets its Kubernetes token
-  from kubelogin, because AKS local accounts are disabled.
+  from kubelogin, because AKS local accounts are disabled (automation without kubelogin can pass a token
+  instead: `kube_login = "token"`, see Inputs).
 - An Azure identity that can create resources and role assignments: Owner, or Contributor plus Role Based
   Access Control Administrator, on the subscription (or on the resource group, with
   `resource_group.mode = "existing"`). Use `az login`, or a service principal in `ARM_CLIENT_ID`,
@@ -182,7 +183,9 @@ cd platform && tofu init -backend=false && tofu test
 cd ../app   && tofu init -backend=false && tofu test
 ```
 
-The tests use mock providers and cover every layer mode; they need no Azure subscription.
+The tests use mock providers and cover every layer mode; they need no Azure subscription. The platform
+tests stand in for the `aks` module (`override_module`), because a mock cannot fill the AGIC identity it
+reads; `tofu validate` still checks the module.
 
 ## Contributing
 
