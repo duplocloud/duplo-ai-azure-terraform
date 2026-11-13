@@ -6,9 +6,10 @@
 tofu fmt -recursive
 cd platform && tofu init -backend=false && tofu validate && tofu test
 cd ../app   && tofu init -backend=false && tofu validate && tofu test
+cd .. && tflint --init && tflint --recursive --config "$PWD/.tflint.hcl"
 ```
 
-CI runs the same commands with OpenTofu 1.13.2 on every pull request.
+CI runs the same commands with OpenTofu 1.13.2 and TFLint 0.65.0 on every pull request.
 
 ## The contract
 
@@ -57,6 +58,7 @@ Deliberate, so keep them unless the AWS repo changes too:
   `deployment.account_id` is the subscription ID, `vpc_id` the VNet ID, `load_balancer_hostname` the
   gateway's public IP, and `state.bucket` the state storage account (`state.resource_group_name` and
   `state.container_name` are optional and default to the agent's names).
+- **Each module has its own `versions.tf`** and **CI also runs TFLint** (`.tflint.hcl`), as on GCP.
 - **Sign-in is the local admin only** (`helpdesk.values.local_admin_email`, `secrets.local_admin_password`),
   as on GCP; the local admin is the only super user. SSO is set up in Helpdesk after deployment.
 
