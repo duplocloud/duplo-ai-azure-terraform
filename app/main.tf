@@ -3,7 +3,7 @@ data "terraform_remote_state" "platform" {
 
   config = {
     resource_group_name  = var.state.resource_group_name
-    storage_account_name = var.state.storage_account_name
+    storage_account_name = var.state.bucket
     container_name       = var.state.container_name
     key                  = var.state.platform_key
     subscription_id      = var.deployment.account_id
