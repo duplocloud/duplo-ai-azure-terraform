@@ -32,10 +32,11 @@ variables {
     account_id = "00000000-0000-0000-0000-000000000000"
   }
   state = {
-    resource_group_name  = "tfstate-rg"
-    storage_account_name = "tfstate123"
-    container_name       = "tfstate"
-    platform_key         = "helpdesk/platform.tfstate"
+    bucket              = "tfstate123"
+    region              = "westus2"
+    platform_key        = "helpdesk/platform.tfstate"
+    resource_group_name = "tfstate-rg"
+    container_name      = "tfstate"
   }
   addons = { mode = "create", values = {} }
   helpdesk = {

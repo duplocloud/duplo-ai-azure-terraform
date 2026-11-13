@@ -10,12 +10,13 @@ variable "deployment" {
 }
 
 variable "state" {
-  description = "Where the platform root's state lives: { resource_group_name, storage_account_name, container_name, platform_key }"
+  description = "Where the platform root's state lives, in the shape AWS and GCP use: bucket is the storage account name, platform_key the blob name. region is accepted for that shape and not used by azurerm. resource_group_name and container_name default to the names the Cloud Deployment agent creates."
   type = object({
-    resource_group_name  = string
-    storage_account_name = string
-    container_name       = string
-    platform_key         = string
+    bucket              = string
+    region              = optional(string)
+    platform_key        = string
+    resource_group_name = optional(string, "duplo-helpdesk-tfstate")
+    container_name      = optional(string, "tfstate")
   })
 }
 

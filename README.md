@@ -89,8 +89,11 @@ Other inputs:
 - `secrets` (platform root, sensitive map): `tls_pfx_base64` (the PFX, base64-encoded) and
   `tls_pfx_password`. Not needed when `gateway.values.key_vault_secret_id` points at a Key Vault
   certificate (with `key_vault_identity_id`), or when the gateway is adopted.
-- `state` (app root): `{ resource_group_name, storage_account_name, container_name, platform_key }`,
-  where the platform state lives.
+- `state` (app root): `{ bucket, region, platform_key, resource_group_name, container_name }`, where the
+  platform state lives, in the shape the AWS and GCP repos use. `bucket` is the storage account name and
+  `platform_key` the blob name; `region` is optional and unused by azurerm. `resource_group_name` and
+  `container_name` default to `duplo-helpdesk-tfstate` and `tfstate` (the names the Cloud Deployment agent
+  creates).
 - `secrets` (app root, sensitive map): `azure_api_key` (the Foundry key), `licensing_token`, and depending
   on the login method `local_admin_password`, `google_client_secret` or `microsoft_client_secret`;
   optional `slack_app_token`, `slack_bot_token`.
