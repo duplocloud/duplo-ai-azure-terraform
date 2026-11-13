@@ -22,7 +22,7 @@ locals {
 
   # Resolved layer outputs: module output when created, else var.<layer>.provides.<name>
   resource_group_name = local.create_resource_group ? azurerm_resource_group.this[0].name : try(var.resource_group.provides.name, null)
-  resource_group_id   = "/subscriptions/${var.deployment.subscription_id}/resourceGroups/${local.resource_group_name}"
+  resource_group_id   = "/subscriptions/${var.deployment.account_id}/resourceGroups/${local.resource_group_name}"
 
   vnet_id                    = local.create_network ? module.network[0].vnet_id : try(var.network.provides.vnet_id, null)
   aks_subnet_id              = local.create_network ? module.network[0].aks_subnet_id : try(var.network.provides.aks_subnet_id, null)

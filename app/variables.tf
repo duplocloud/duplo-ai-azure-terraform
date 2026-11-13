@@ -1,11 +1,11 @@
 variable "deployment" {
-  description = "Deployment identity: { name, region, host, xterm_host, subscription_id }"
+  description = "Deployment identity: { name, region, host, xterm_host, account_id }. account_id is the Azure subscription ID (the name AWS and GCP use)"
   type = object({
-    name            = string
-    region          = string
-    host            = string
-    xterm_host      = string
-    subscription_id = string
+    name       = string
+    region     = string
+    host       = string
+    xterm_host = string
+    account_id = string
   })
 }
 

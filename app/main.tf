@@ -6,7 +6,7 @@ data "terraform_remote_state" "platform" {
     storage_account_name = var.state.storage_account_name
     container_name       = var.state.container_name
     key                  = var.state.platform_key
-    subscription_id      = var.deployment.subscription_id
+    subscription_id      = var.deployment.account_id
     use_azuread_auth     = true
   }
 }
