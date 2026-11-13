@@ -152,7 +152,7 @@ Destroy in the reverse order: `app`, then `platform`. Adopted resources are left
 
 `platform`: resource group, network, gateway, cluster and storage identifiers (`app_gateway_public_ip`,
 `cluster_name`, `cluster_endpoint`, `storage_account_name`, `nat_public_ip`, `dns_mode`, `dns_records`,
-and more; see `platform/outputs.tf`). `app`: `helpdesk_url`, `load_balancer_ip`, `dns_records` (the
+and more; see `platform/outputs.tf`). `app`: `helpdesk_url`, `load_balancer_hostname` (the gateway's public IP), `dns_records` (the
 records to create when DNS is external), and the sensitive `secrets` and `generated`.
 
 ## Notes

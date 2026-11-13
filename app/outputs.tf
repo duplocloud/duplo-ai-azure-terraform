@@ -7,8 +7,8 @@ locals {
   ]
 }
 
-output "load_balancer_ip" {
-  description = "Application Gateway public IP serving Helpdesk"
+output "load_balancer_hostname" {
+  description = "Address the DNS records point at: on Azure the Application Gateway public IP (the name AWS and GCP use)"
   value       = local.platform.app_gateway_public_ip
 }
 
