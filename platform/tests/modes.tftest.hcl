@@ -40,11 +40,11 @@ mock_provider "random" {}
 
 variables {
   deployment = {
-    name            = "acme"
-    region          = "westus2"
-    host            = "helpdesk.example.com"
-    xterm_host      = "xterm.example.com"
-    subscription_id = "00000000-0000-0000-0000-000000000000"
+    name       = "acme"
+    region     = "westus2"
+    host       = "helpdesk.example.com"
+    xterm_host = "xterm.example.com"
+    account_id = "00000000-0000-0000-0000-000000000000"
   }
   resource_group = { mode = "create", values = {}, provides = {} }
   network        = { mode = "create", values = {}, provides = {} }
@@ -112,7 +112,7 @@ run "existing_everything" {
       mode   = "existing"
       values = {}
       provides = {
-        vnet_id                    = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/net/providers/Microsoft.Network/virtualNetworks/v"
+        vpc_id                     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/net/providers/Microsoft.Network/virtualNetworks/v"
         aks_subnet_id              = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/net/providers/Microsoft.Network/virtualNetworks/v/subnets/aks"
         app_gateway_subnet_id      = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/net/providers/Microsoft.Network/virtualNetworks/v/subnets/appgw"
         private_endpoint_subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/net/providers/Microsoft.Network/virtualNetworks/v/subnets/pe"

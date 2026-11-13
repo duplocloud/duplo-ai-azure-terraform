@@ -1,5 +1,6 @@
 output "app_gateway_id" {
-  value = azurerm_application_gateway.this.id
+  description = "Application Gateway resource ID"
+  value       = azurerm_application_gateway.this.id
 }
 
 output "public_ip" {
@@ -8,7 +9,8 @@ output "public_ip" {
 }
 
 output "ssl_certificate_name" {
-  value = var.ssl_certificate_name
+  description = "Gateway TLS certificate name referenced by the Helm ingress"
+  value       = var.ssl_certificate_name
 }
 
 output "identity_id" {

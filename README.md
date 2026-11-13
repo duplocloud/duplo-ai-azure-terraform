@@ -50,9 +50,6 @@ from the platform state with `terraform_remote_state`.
 - A TLS certificate as a PFX (full chain plus private key) covering both Helpdesk hostnames.
 - A [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/) Claude deployment: its Anthropic
   endpoint (`https://<resource>.services.ai.azure.com/anthropic`) and key.
-- For Microsoft sign-in: an Entra ID app registration (web platform) with the redirect URIs
-  `https://<host>/app/signin-microsoft` and `https://<host>/api/Account/ExternalLoginCallback`, and a
-  client secret.
 
 ## Inputs
 
@@ -73,7 +70,7 @@ instantiated and the root uses `provides` instead.
 | Layer | Root | Modes | `provides` for adopt modes |
 |---|---|---|---|
 | `resource_group` | platform | `create`, `existing` | `name` |
-| `network` | platform | `create`, `existing` | `vnet_id`, `aks_subnet_id`, `app_gateway_subnet_id`, `private_endpoint_subnet_id`, optional `nat_public_ip` |
+| `network` | platform | `create`, `existing` | `vpc_id` (the VNet ID), `aks_subnet_id`, `app_gateway_subnet_id`, `private_endpoint_subnet_id`, optional `nat_public_ip` |
 | `gateway` | platform | `create`, `existing` | `app_gateway_id`, `public_ip`, `ssl_certificate_name`, optional `identity_id` |
 | `cluster` | platform | `create`, `existing` (must already run AGIC for the gateway) | `cluster_name`, `cluster_id`, `cluster_endpoint`, `cluster_ca_certificate`, optional `oidc_issuer_url` |
 | `storage` | platform | `create`, `existing` | `account_name`, `resource_group_name`, `backend_share_name`, optional `backend_share_gib` |
@@ -83,16 +80,22 @@ instantiated and the root uses `provides` instead.
 
 Other inputs:
 
-- `deployment` (both roots): `{ name, region, host, xterm_host, subscription_id }`. `host` and
-  `xterm_host` are the Helpdesk hostnames.
+- `deployment` (both roots): `{ name, region, host, xterm_host, account_id }`. `host` and
+  `xterm_host` are the Helpdesk hostnames. `account_id` is the Azure subscription ID
+  (the name the AWS and GCP repos use for the account or project).
 - `secrets` (platform root, sensitive map): `tls_pfx_base64` (the PFX, base64-encoded) and
   `tls_pfx_password`. Not needed when `gateway.values.key_vault_secret_id` points at a Key Vault
   certificate (with `key_vault_identity_id`), or when the gateway is adopted.
-- `state` (app root): `{ resource_group_name, storage_account_name, container_name, platform_key }`,
-  where the platform state lives.
-- `secrets` (app root, sensitive map): `azure_api_key` (the Foundry key), `licensing_token`, and depending
-  on the login method `local_admin_password`, `google_client_secret` or `microsoft_client_secret`;
-  optional `slack_app_token`, `slack_bot_token`.
+- `state` (app root): `{ bucket, region, platform_key, resource_group_name, container_name }`, where the
+  platform state lives, in the shape the AWS and GCP repos use. `bucket` is the storage account name and
+  `platform_key` the blob name; `region` is optional and unused by azurerm. `resource_group_name` and
+  `container_name` default to `duplo-helpdesk-tfstate` and `tfstate` (the names the Cloud Deployment agent
+  creates).
+- `secrets` (app root, sensitive map): `local_admin_password`, `azure_api_key` (the Foundry key),
+  `licensing_token`; optional `slack_app_token`, `slack_bot_token`.
+- Sign-in is the local admin only (`helpdesk.values.local_admin_email` and `secrets.local_admin_password`),
+  and the local admin is the Helpdesk super user. Google and Microsoft sign-in are not offered here; set up
+  SSO in Helpdesk after deployment. A saved `login_method` other than `local` fails the plan.
 - `kube_login` (app root): kubelogin login method, `azurecli` (default), `spn`, `workloadidentity` or
   `msi`; or `token`, where kubelogin is not used and both providers read a pre-minted Entra ID token for
   the AKS server app from the `KUBE_TOKEN` environment variable (for automation without the kubelogin
@@ -103,8 +106,8 @@ Pass both `secrets` maps as `TF_VAR_secrets` so they never land in a file. The m
 (`modules/*/variables.tf`) are the full list of `values` each layer accepts, with descriptions and
 defaults. Notable ones: `cluster.values.api_authorized_ip_ranges` (limit the Kubernetes API to your IP;
 the NAT egress IP is added automatically), `cluster.values.node_vm_size`, `gateway.values.sku_name`
-(`WAF_v2` for a web application firewall), and `helpdesk.values.login_method`, `azure_base_url`,
-`auth_super_users`, `xterm_enabled`, `chart_version`.
+(`WAF_v2` for a web application firewall), and `helpdesk.values.local_admin_email`, `azure_base_url`,
+`xterm_enabled`, `chart_version`.
 
 ## Usage
 
@@ -137,13 +140,13 @@ tofu output -json dns_records
 cd ../app
 sed 's/platform.tfstate/app.tfstate/' ../platform/backend.hcl > backend.hcl
 tofu init -backend-config=backend.hcl
-export TF_VAR_secrets='{"azure_api_key":"...","microsoft_client_secret":"..."}'
+export TF_VAR_secrets='{"local_admin_password":"...","azure_api_key":"..."}'
 tofu plan  -var-file=../examples/greenfield/app.tfvars.json -out=app.tfplan
 tofu apply app.tfplan
 tofu output helpdesk_url
 ```
 
-Sign in with an account listed in `auth_super_users` to get the admin role.
+Sign in as `local_admin_email` with `local_admin_password`; that account has the admin role.
 
 Destroy in the reverse order: `app`, then `platform`. Adopted resources are left untouched.
 
@@ -151,7 +154,7 @@ Destroy in the reverse order: `app`, then `platform`. Adopted resources are left
 
 `platform`: resource group, network, gateway, cluster and storage identifiers (`app_gateway_public_ip`,
 `cluster_name`, `cluster_endpoint`, `storage_account_name`, `nat_public_ip`, `dns_mode`, `dns_records`,
-and more; see `platform/outputs.tf`). `app`: `helpdesk_url`, `load_balancer_ip`, `dns_records` (the
+and more; see `platform/outputs.tf`). `app`: `helpdesk_url`, `load_balancer_hostname` (the gateway's public IP), `dns_records` (the
 records to create when DNS is external), and the sensitive `secrets` and `generated`.
 
 ## Notes
