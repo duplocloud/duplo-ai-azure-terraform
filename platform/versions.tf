@@ -6,6 +6,8 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.30"
     }
+    # Used by modules/files (the storage account name suffix); the root supplies it.
+    # tflint-ignore: terraform_unused_required_providers
     random = {
       source  = "hashicorp/random"
       version = "~> 3.6"

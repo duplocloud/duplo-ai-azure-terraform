@@ -95,6 +95,8 @@ variable "secrets" {
   }
 }
 
+# Part of the shared root contract (AWS and GCP take it too); the app root creates no Azure resources to tag.
+# tflint-ignore: terraform_unused_declarations
 variable "common_tags" {
   description = "Tags applied to all resources"
   type        = map(string)
