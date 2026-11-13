@@ -26,7 +26,7 @@ these properties, or the agent (and every other cloud's equivalent repo) breaks:
   resource. (`resource_group` is a single resource in the root rather than a module.)
 - **Values**: roots pass module arguments as `try(var.<layer>.values.<name>, null)` so an omitted value
   falls back to the module default. Every module variable that a user can set has a `description`.
-- **Root inputs**: `deployment` `{ name, region, host, xterm_host, subscription_id }`, `state` (app root),
+- **Root inputs**: `deployment` `{ name, region, host, xterm_host, account_id }`, `state` (app root),
   `secrets` (sensitive map: the TLS certificate in `platform`, application secrets in `app`),
   `common_tags`.
 - **Outputs**: the output names in `platform/outputs.tf` and `app/outputs.tf` are part of the contract.

@@ -83,8 +83,9 @@ instantiated and the root uses `provides` instead.
 
 Other inputs:
 
-- `deployment` (both roots): `{ name, region, host, xterm_host, subscription_id }`. `host` and
-  `xterm_host` are the Helpdesk hostnames.
+- `deployment` (both roots): `{ name, region, host, xterm_host, account_id }`. `host` and
+  `xterm_host` are the Helpdesk hostnames. `account_id` is the Azure subscription ID
+  (the name the AWS and GCP repos use for the account or project).
 - `secrets` (platform root, sensitive map): `tls_pfx_base64` (the PFX, base64-encoded) and
   `tls_pfx_password`. Not needed when `gateway.values.key_vault_secret_id` points at a Key Vault
   certificate (with `key_vault_identity_id`), or when the gateway is adopted.
