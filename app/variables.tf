@@ -52,9 +52,8 @@ variable "addons" {
 }
 
 # helpdesk: { mode = "create", values }
-# values (all optional): login_method (local|google|microsoft, default local),
-#   local_admin_email, google_client_id, microsoft_client_id, microsoft_tenant_id,
-#   auth_super_users, azure_base_url, chart_version, namespace, release_name,
+# values: local_admin_email (required; sign-in is the local admin only, who is also the
+#   super user), and optional azure_base_url, chart_version, namespace, release_name,
 #   xterm_enabled, mongodb_backup_enabled, helpdesk_mcp_enabled, backend_image_tag,
 #   frontend_image_tag, slack_*
 variable "helpdesk" {
@@ -66,29 +65,16 @@ variable "helpdesk" {
     error_message = "helpdesk.mode must be \"create\"."
   }
 
+  # Google and Microsoft sign-in were removed (SSO is a Helpdesk setting after deployment): a
+  # deployment that set them must move to the local admin instead of silently losing them.
   validation {
-    condition     = contains(["local", "google", "microsoft"], try(var.helpdesk.values.login_method, "local"))
-    error_message = "helpdesk.values.login_method must be one of: local, google, microsoft."
+    condition     = try(coalesce(var.helpdesk.values.login_method, "local"), "local") == "local"
+    error_message = "Google and Microsoft sign-in are no longer supported. Remove helpdesk.values.login_method (and the OAuth client values), and set helpdesk.values.local_admin_email and secrets.local_admin_password."
   }
 
   validation {
-    condition     = try(var.helpdesk.values.login_method, "local") != "local" || length(try(var.helpdesk.values.local_admin_email, "")) > 0
-    error_message = "helpdesk.values.local_admin_email is required for local login."
-  }
-
-  validation {
-    condition     = try(var.helpdesk.values.login_method, "local") != "local" || length(lookup(var.secrets, "local_admin_password", "")) > 0
-    error_message = "secrets.local_admin_password is required for local login."
-  }
-
-  validation {
-    condition     = try(var.helpdesk.values.login_method, "local") != "microsoft" || (length(try(var.helpdesk.values.microsoft_client_id, "")) > 0 && length(try(var.helpdesk.values.microsoft_tenant_id, "")) > 0)
-    error_message = "helpdesk.values.microsoft_client_id and microsoft_tenant_id are required for microsoft login."
-  }
-
-  validation {
-    condition     = try(var.helpdesk.values.login_method, "local") != "microsoft" || length(lookup(var.secrets, "microsoft_client_secret", "")) > 0
-    error_message = "secrets.microsoft_client_secret is required for microsoft login."
+    condition     = can(regex("^[^@\\s,]+@[^@\\s,]+\\.[^@\\s,]+$", try(trimspace(var.helpdesk.values.local_admin_email), "")))
+    error_message = "Helpdesk needs helpdesk.values.local_admin_email, an email address (the admin who signs in first)."
   }
 
   validation {
@@ -98,10 +84,15 @@ variable "helpdesk" {
 }
 
 variable "secrets" {
-  description = "User-entered secrets. Keys: licensing_token, azure_api_key, local_admin_password, google_client_secret, microsoft_client_secret, slack_app_token, slack_bot_token"
+  description = "User-entered secrets. Keys: licensing_token, azure_api_key, local_admin_password, slack_app_token, slack_bot_token"
   type        = map(string)
   default     = {}
   sensitive   = true
+
+  validation {
+    condition     = length(lookup(var.secrets, "local_admin_password", "")) > 0
+    error_message = "secrets.local_admin_password is required (the local admin's password)."
+  }
 }
 
 variable "common_tags" {
