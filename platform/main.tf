@@ -24,7 +24,7 @@ locals {
   resource_group_name = local.create_resource_group ? azurerm_resource_group.this[0].name : try(var.resource_group.provides.name, null)
   resource_group_id   = "/subscriptions/${var.deployment.account_id}/resourceGroups/${local.resource_group_name}"
 
-  vnet_id                    = local.create_network ? module.network[0].vnet_id : try(var.network.provides.vnet_id, null)
+  vnet_id                    = local.create_network ? module.network[0].vnet_id : try(var.network.provides.vpc_id, null)
   aks_subnet_id              = local.create_network ? module.network[0].aks_subnet_id : try(var.network.provides.aks_subnet_id, null)
   app_gateway_subnet_id      = local.create_network ? module.network[0].app_gateway_subnet_id : try(var.network.provides.app_gateway_subnet_id, null)
   private_endpoint_subnet_id = local.create_network ? module.network[0].private_endpoint_subnet_id : try(var.network.provides.private_endpoint_subnet_id, null)

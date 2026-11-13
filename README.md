@@ -73,7 +73,7 @@ instantiated and the root uses `provides` instead.
 | Layer | Root | Modes | `provides` for adopt modes |
 |---|---|---|---|
 | `resource_group` | platform | `create`, `existing` | `name` |
-| `network` | platform | `create`, `existing` | `vnet_id`, `aks_subnet_id`, `app_gateway_subnet_id`, `private_endpoint_subnet_id`, optional `nat_public_ip` |
+| `network` | platform | `create`, `existing` | `vpc_id` (the VNet ID), `aks_subnet_id`, `app_gateway_subnet_id`, `private_endpoint_subnet_id`, optional `nat_public_ip` |
 | `gateway` | platform | `create`, `existing` | `app_gateway_id`, `public_ip`, `ssl_certificate_name`, optional `identity_id` |
 | `cluster` | platform | `create`, `existing` (must already run AGIC for the gateway) | `cluster_name`, `cluster_id`, `cluster_endpoint`, `cluster_ca_certificate`, optional `oidc_issuer_url` |
 | `storage` | platform | `create`, `existing` | `account_name`, `resource_group_name`, `backend_share_name`, optional `backend_share_gib` |

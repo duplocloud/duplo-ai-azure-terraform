@@ -6,8 +6,9 @@ output "location" {
   value = local.location
 }
 
-output "vnet_id" {
-  value = local.vnet_id
+output "vpc_id" {
+  description = "VNet resource ID (the name AWS and GCP use for the network)"
+  value       = local.vnet_id
 }
 
 output "aks_subnet_id" {
