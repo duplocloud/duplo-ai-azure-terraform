@@ -34,6 +34,32 @@ these properties, or the agent (and every other cloud's equivalent repo) breaks:
   secrets via `random_password`.
 - **No `ui.yaml`** or other wizard files: the agent keeps its presentation layer in its own repo.
 
+## Where this repo differs from `terraform-aws-helpdesk`
+
+Deliberate, so keep them unless the AWS repo changes too:
+
+- **Two extra platform layers.** `resource_group` holds everything the deployment creates (a single
+  resource in the root, no module). `gateway` is the Application Gateway v2 that serves Helpdesk through the
+  AGIC add-on, where AWS uses an ALB created by the load balancer controller.
+- **`secrets` on the platform root too.** It carries the TLS certificate for the gateway (`tls_pfx_base64`,
+  `tls_pfx_password`), unless `gateway.values.key_vault_secret_id` names a Key Vault certificate. AWS issues
+  the certificate with ACM and needs no platform secrets.
+- **`kube_login` on the app root.** AKS runs with local accounts off, so the Kubernetes and Helm providers
+  authenticate with Entra ID through kubelogin, or with `token`, which reads a pre-minted token from the
+  `KUBE_TOKEN` environment variable (the agent uses this; a token in a variable would be saved in the plan
+  file). AWS gets a token without an exec plugin.
+- **No `certificate_arn` output.** The certificate is the uploaded PFX or an existing Key Vault certificate,
+  so there is no issuance or DNS validation to wait for.
+- **Validation blocks on the layer variables** (`platform/variables.tf`, `app/variables.tf`), as on GCP.
+  They reject inputs that would otherwise plan and fail late (a gateway with no certificate, `azure_dns`
+  with no zone, a missing admin email).
+- **Names reused from AWS where the concept is the same**, even though the Azure values differ:
+  `deployment.account_id` is the subscription ID, `vpc_id` the VNet ID, `load_balancer_hostname` the
+  gateway's public IP, and `state.bucket` the state storage account (`state.resource_group_name` and
+  `state.container_name` are optional and default to the agent's names).
+- **Sign-in is the local admin only** (`helpdesk.values.local_admin_email`, `secrets.local_admin_password`),
+  as on GCP; the local admin is the only super user. SSO is set up in Helpdesk after deployment.
+
 ## Upgrade safety
 
 Every release reaches existing deployments: the agent moves customers to the newly pinned release on their
