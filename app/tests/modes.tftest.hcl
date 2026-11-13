@@ -42,20 +42,17 @@ variables {
   helpdesk = {
     mode = "create"
     values = {
-      login_method        = "microsoft"
-      microsoft_client_id = "33333333-3333-3333-3333-333333333333"
-      microsoft_tenant_id = "11111111-1111-1111-1111-111111111111"
-      auth_super_users    = "admin@example.com"
-      azure_base_url      = "https://acme.services.ai.azure.com/anthropic"
+      local_admin_email = "admin@example.com"
+      azure_base_url    = "https://acme.services.ai.azure.com/anthropic"
     }
   }
   secrets = {
-    microsoft_client_secret = "ms-secret"
-    azure_api_key           = "foundry-key"
+    local_admin_password = "admin-pw"
+    azure_api_key        = "foundry-key"
   }
 }
 
-run "microsoft_login" {
+run "local_admin_and_foundry" {
   command = apply
 
   assert {
@@ -64,13 +61,13 @@ run "microsoft_login" {
   }
 
   assert {
-    condition     = yamldecode(module.helpdesk.rendered_values).secrets.microsoftClientId == "33333333-3333-3333-3333-333333333333"
-    error_message = "the Microsoft client ID should be rendered"
+    condition     = yamldecode(module.helpdesk.rendered_values).secrets.googleClientId == "" && yamldecode(module.helpdesk.rendered_values).secrets.microsoftClientId == "" && yamldecode(module.helpdesk.rendered_values).secrets.microsoftTenantId == ""
+    error_message = "Google and Microsoft sign-in must stay off."
   }
 
   assert {
     condition     = yamldecode(module.helpdesk.rendered_values).config.authSuperUsers == "admin@example.com"
-    error_message = "super users should be rendered"
+    error_message = "the local admin should be the only super user"
   }
 
   assert {
@@ -79,12 +76,12 @@ run "microsoft_login" {
   }
 
   assert {
-    condition     = contains(module.helpdesk.sensitive_value_labels, "secrets.microsoftClientSecret") && contains(module.helpdesk.sensitive_value_labels, "secrets.azureApiKey")
-    error_message = "the client secret and model key should be sensitive set values"
+    condition     = contains(module.helpdesk.sensitive_value_labels, "backend.extraEnv.Authentication__LocalAdminPassword") && contains(module.helpdesk.sensitive_value_labels, "secrets.azureApiKey")
+    error_message = "the admin password and model key should be sensitive set values"
   }
 
   assert {
-    condition     = !strcontains(module.helpdesk.rendered_values, "ms-secret") && !strcontains(module.helpdesk.rendered_values, "foundry-key")
+    condition     = !strcontains(module.helpdesk.rendered_values, "admin-pw") && !strcontains(module.helpdesk.rendered_values, "foundry-key")
     error_message = "secrets must never be rendered into the values document"
   }
 
@@ -144,7 +141,7 @@ run "local_login" {
   variables {
     helpdesk = {
       mode   = "create"
-      values = { login_method = "local", local_admin_email = "admin@example.com" }
+      values = { local_admin_email = " admin@example.com " }
     }
     secrets = { local_admin_password = "pw", licensing_token = "lic" }
   }
@@ -160,8 +157,8 @@ run "local_login" {
   }
 
   assert {
-    condition     = yamldecode(module.helpdesk.rendered_values).secrets.microsoftClientId == ""
-    error_message = "other providers should be disabled"
+    condition     = yamldecode(module.helpdesk.rendered_values).backend.extraEnv[0].value == "admin@example.com"
+    error_message = "the admin email should be trimmed"
   }
 }
 
@@ -206,31 +203,61 @@ run "generated_secrets" {
   }
 }
 
-run "rejects_unknown_login_method" {
+run "rejects_sso_login_method" {
   command = plan
 
   variables {
-    helpdesk = { mode = "create", values = { login_method = "saml" } }
+    helpdesk = { mode = "create", values = { login_method = "microsoft", microsoft_client_id = "mid", local_admin_email = "admin@example.com" } }
   }
 
   expect_failures = [var.helpdesk]
 }
 
-run "microsoft_login_requires_secret" {
+run "rejects_missing_admin_email" {
+  command = plan
+
+  variables {
+    helpdesk = { mode = "create", values = {} }
+  }
+
+  expect_failures = [var.helpdesk]
+}
+
+run "rejects_null_admin_email" {
+  command = plan
+
+  variables {
+    helpdesk = { mode = "create", values = { local_admin_email = null } }
+  }
+
+  expect_failures = [var.helpdesk]
+}
+
+run "rejects_bad_admin_email" {
+  command = plan
+
+  variables {
+    helpdesk = { mode = "create", values = { local_admin_email = "not-an-email" } }
+  }
+
+  expect_failures = [var.helpdesk]
+}
+
+run "requires_admin_password" {
   command = plan
 
   variables {
     secrets = { azure_api_key = "foundry-key" }
   }
 
-  expect_failures = [var.helpdesk]
+  expect_failures = [var.secrets]
 }
 
 run "foundry_requires_key" {
   command = plan
 
   variables {
-    secrets = { microsoft_client_secret = "ms-secret" }
+    secrets = { local_admin_password = "admin-pw" }
   }
 
   expect_failures = [var.helpdesk]

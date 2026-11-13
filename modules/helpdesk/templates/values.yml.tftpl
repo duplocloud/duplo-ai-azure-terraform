@@ -37,9 +37,7 @@ config:
   cloudProvider: ""
   aiStudioIsMasterDisabled: true
   azureBaseUrl: "${azure_base_url}"
-%{ if auth_super_users != "" ~}
   authSuperUsers: ${jsonencode(auth_super_users)}
-%{ endif ~}
 %{ if frontend_image_tag != "" ~}
 frontend:
   image:
@@ -72,12 +70,12 @@ mongodbBackup:
   storage:
     storageClass: ${backup_storage_class_name}
 secrets:
-  # OAuth client IDs. An empty string ("") disables that provider. Client secrets,
-  # the licensing token and the model API key are passed as sensitive Helm set
-  # values and never rendered into this document.
-  googleClientId: "${google_client_id}"
-  microsoftClientId: "${microsoft_client_id}"
-  microsoftTenantId: "${microsoft_tenant_id}"
+  # Sign-in is the local admin only: "" keeps Google and Microsoft sign-in off
+  # whatever the chart defaults to. The licensing token and the model API key are
+  # passed as sensitive Helm set values and never rendered into this document.
+  googleClientId: ""
+  microsoftClientId: ""
+  microsoftTenantId: ""
 slackBackend:
   enabled: ${slack_backend_enabled}
 %{ if slack_backend_enabled ~}

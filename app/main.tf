@@ -75,12 +75,7 @@ module "helpdesk" {
   chart_version  = try(var.helpdesk.values.chart_version, null)
   azure_base_url = try(var.helpdesk.values.azure_base_url, null)
 
-  login_method        = try(var.helpdesk.values.login_method, null)
-  local_admin_email   = try(var.helpdesk.values.local_admin_email, null)
-  google_client_id    = try(var.helpdesk.values.google_client_id, null)
-  microsoft_client_id = try(var.helpdesk.values.microsoft_client_id, null)
-  microsoft_tenant_id = try(var.helpdesk.values.microsoft_tenant_id, null)
-  auth_super_users    = try(var.helpdesk.values.auth_super_users, null)
+  local_admin_email = try(trimspace(var.helpdesk.values.local_admin_email), "")
 
   xterm_enabled                    = try(var.helpdesk.values.xterm_enabled, null)
   mongodb_backup_enabled           = try(var.helpdesk.values.mongodb_backup_enabled, null)
