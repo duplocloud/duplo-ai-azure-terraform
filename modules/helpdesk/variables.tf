@@ -25,12 +25,12 @@ variable "chart_version" {
 }
 
 variable "helpdesk_dns" {
-  description = "Helpdesk DNS hostname (e.g. helpdesk.example.com)"
+  description = "DuploCloud AI DNS hostname (e.g. duplo-ai.example.com)"
   type        = string
 }
 
 variable "helpdesk_xterm_dns" {
-  description = "Helpdesk xterm DNS hostname"
+  description = "DuploCloud AI xterm DNS hostname"
   type        = string
 }
 
@@ -76,7 +76,7 @@ variable "azure_base_url" {
 }
 
 # ── Authentication ────────────────────────────────────────────────────────────
-# Sign-in is the local admin only; SSO is configured in Helpdesk after deployment.
+# Sign-in is the local admin only; SSO is configured in DuploCloud AI after deployment.
 variable "local_admin_email" {
   description = "Email of the local admin, who signs in first with secrets.local_admin_password and is the only super user"
   type        = string

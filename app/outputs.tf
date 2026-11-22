@@ -13,12 +13,12 @@ output "load_balancer_hostname" {
 }
 
 output "helpdesk_url" {
-  description = "Helpdesk URL"
+  description = "DuploCloud AI URL"
   value       = "https://${var.deployment.host}"
 }
 
 output "dns_records" {
-  description = "A records to create for the Helpdesk hosts; empty when Azure DNS is managed by the platform root"
+  description = "A records to create for the DuploCloud AI hosts; empty when Azure DNS is managed by the platform root"
   value       = local.dns_records
 }
 

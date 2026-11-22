@@ -9,7 +9,7 @@ output "resource_group_name" {
 }
 
 output "backend_share_name" {
-  description = "NFS share for the Helpdesk backend"
+  description = "NFS share for the DuploCloud AI backend"
   value       = azurerm_storage_share.backend.name
 }
 

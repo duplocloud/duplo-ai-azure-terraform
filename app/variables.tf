@@ -57,7 +57,7 @@ variable "addons" {
 #   xterm_enabled, mongodb_backup_enabled, helpdesk_mcp_enabled, backend_image_tag,
 #   frontend_image_tag, slack_*
 variable "helpdesk" {
-  description = "Helpdesk layer"
+  description = "DuploCloud AI layer (module helpdesk)"
   type        = any
 
   validation {
@@ -65,7 +65,7 @@ variable "helpdesk" {
     error_message = "helpdesk.mode must be \"create\"."
   }
 
-  # Google and Microsoft sign-in were removed (SSO is a Helpdesk setting after deployment): a
+  # Google and Microsoft sign-in were removed (SSO is a DuploCloud AI setting after deployment): a
   # deployment that set them must move to the local admin instead of silently losing them.
   validation {
     condition     = try(coalesce(var.helpdesk.values.login_method, "local"), "local") == "local"
@@ -74,7 +74,7 @@ variable "helpdesk" {
 
   validation {
     condition     = can(regex("^[^@\\s,]+@[^@\\s,]+\\.[^@\\s,]+$", try(trimspace(var.helpdesk.values.local_admin_email), "")))
-    error_message = "Helpdesk needs helpdesk.values.local_admin_email, an email address (the admin who signs in first)."
+    error_message = "DuploCloud AI needs helpdesk.values.local_admin_email, an email address (the admin who signs in first)."
   }
 
   validation {

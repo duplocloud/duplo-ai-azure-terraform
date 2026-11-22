@@ -29,7 +29,7 @@ output "private_endpoint_subnet_id" {
 }
 
 output "nat_public_ip" {
-  description = "Outbound IP of the cluster; allow it wherever Helpdesk calls out (e.g. a restricted Foundry resource)"
+  description = "Outbound IP of the cluster; allow it wherever DuploCloud AI calls out (e.g. a restricted Foundry resource)"
   value       = local.nat_public_ip
 }
 
@@ -39,7 +39,7 @@ output "app_gateway_id" {
 }
 
 output "app_gateway_public_ip" {
-  description = "Public IP every Helpdesk hostname must resolve to"
+  description = "Public IP every DuploCloud AI hostname must resolve to"
   value       = local.app_gateway_public_ip
 }
 
@@ -84,7 +84,7 @@ output "storage_resource_group_name" {
 }
 
 output "backend_share_name" {
-  description = "NFS share for the Helpdesk backend"
+  description = "NFS share for the DuploCloud AI backend"
   value       = local.backend_share_name
 }
 
@@ -99,6 +99,6 @@ output "dns_mode" {
 }
 
 output "dns_records" {
-  description = "A records for the Helpdesk hosts; created by Terraform in azure_dns mode, by you in external mode"
+  description = "A records for the DuploCloud AI hosts; created by Terraform in azure_dns mode, by you in external mode"
   value       = local.dns_records
 }
