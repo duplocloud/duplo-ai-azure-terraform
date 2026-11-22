@@ -4,7 +4,7 @@ output "app_gateway_id" {
 }
 
 output "public_ip" {
-  description = "Public IP every Helpdesk hostname must resolve to"
+  description = "Public IP every DuploCloud AI hostname must resolve to"
   value       = azurerm_public_ip.this.ip_address
 }
 
