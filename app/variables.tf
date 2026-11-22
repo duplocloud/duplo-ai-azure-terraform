@@ -10,7 +10,7 @@ variable "deployment" {
 }
 
 variable "state" {
-  description = "Where the platform root's state lives, in the shape AWS and GCP use: bucket is the storage account name, platform_key the blob name. region is accepted for that shape and not used by azurerm. resource_group_name and container_name default to the names the Cloud Deployment agent creates."
+  description = "Where the platform root's state lives, with the same fields as the AWS and Google Cloud modules: bucket is the storage account name, platform_key the blob name. region is accepted for compatibility and not used by azurerm. resource_group_name and container_name default to duplo-helpdesk-tfstate and tfstate."
   type = object({
     bucket              = string
     region              = optional(string)
@@ -95,7 +95,7 @@ variable "secrets" {
   }
 }
 
-# Part of the shared root contract (AWS and GCP take it too); the app root creates no Azure resources to tag.
+# Accepted for consistency with the AWS and Google Cloud versions; the app root creates no Azure resources to tag.
 # tflint-ignore: terraform_unused_declarations
 variable "common_tags" {
   description = "Tags applied to all resources"

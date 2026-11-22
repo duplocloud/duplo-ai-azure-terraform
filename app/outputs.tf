@@ -23,7 +23,7 @@ output "dns_records" {
 }
 
 output "secrets" {
-  description = "Echo of var.secrets so a takeover can read user-entered secrets back"
+  description = "Echo of var.secrets (sensitive), for automation that needs to read them back"
   value       = var.secrets
   sensitive   = true
 }
