@@ -13,9 +13,9 @@ CI runs the same commands with OpenTofu 1.13.2 and TFLint 0.65.0 on every pull r
 
 ## Compatibility rules
 
-Tooling that deploys Helpdesk, including DuploCloud's managed deployment tooling, pins tagged releases of this
+Tooling that deploys DuploCloud AI, including DuploCloud's managed deployment tooling, pins tagged releases of this
 repository, reads the module variables and runs the two roots. This repository follows the same rules as
-`terraform-aws-helpdesk` and `terraform-google-helpdesk`. Keep these properties so that existing deployments and
+`duplo-ai-aws-terraform` and `duplo-ai-gcp-terraform`. Keep these properties so that existing deployments and
 that tooling keep working:
 
 - **Layout**: `platform/`, `app/`, `modules/<module>/` at the repo root. Roots reference modules as
@@ -38,12 +38,12 @@ that tooling keep working:
 - **Plain OpenTofu / Terraform only**: no tool-specific UI or configuration files in this repository. The
   variable descriptions are the documentation for each input.
 
-## Where this repo differs from `terraform-aws-helpdesk`
+## Where this repo differs from `duplo-ai-aws-terraform`
 
 Deliberate, so keep them unless the AWS repo changes too:
 
 - **Two extra platform layers.** `resource_group` holds everything the deployment creates (a single
-  resource in the root, no module). `gateway` is the Application Gateway v2 that serves Helpdesk through the
+  resource in the root, no module). `gateway` is the Application Gateway v2 that serves DuploCloud AI through the
   AGIC add-on, where AWS uses an ALB created by the load balancer controller.
 - **`secrets` on the platform root too.** It carries the TLS certificate for the gateway (`tls_pfx_base64`,
   `tls_pfx_password`), unless `gateway.values.key_vault_secret_id` names a Key Vault certificate. AWS issues
@@ -63,7 +63,7 @@ Deliberate, so keep them unless the AWS repo changes too:
   `state.container_name` are optional and default to `duplo-helpdesk-tfstate` and `tfstate`).
 - **Each module has its own `versions.tf`** and **CI also runs TFLint** (`.tflint.hcl`), as on GCP.
 - **Sign-in is the local admin only** (`helpdesk.values.local_admin_email`, `secrets.local_admin_password`),
-  as on GCP; the local admin is the only super user. SSO is set up in Helpdesk after deployment.
+  as on GCP; the local admin is the only super user. SSO is set up in DuploCloud AI after deployment.
 
 ## Upgrade safety
 

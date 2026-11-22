@@ -1,10 +1,10 @@
-# terraform-azure-helpdesk
+# duplo-ai-azure-terraform
 
-[DuploCloud](https://duplocloud.com) Helpdesk is an AI-powered helpdesk: AI agents work support tickets alongside
+DuploCloud AI is [DuploCloud](https://duplocloud.com)'s AI-powered helpdesk: AI agents work support tickets alongside
 your team, with a web interface and optional Slack integration. This repository is the OpenTofu / Terraform code
-that deploys Helpdesk into your own Azure subscription: a VNet with NAT egress, an Application Gateway with your
+that deploys DuploCloud AI into your own Azure subscription: a VNet with NAT egress, an Application Gateway with your
 TLS certificate, an AKS cluster with the Application Gateway Ingress Controller, an Azure Files NFS share,
-optional Azure DNS records, and the Helpdesk Helm release.
+optional Azure DNS records, and the DuploCloud AI Helm release.
 
 Every layer can be **created** or can **adopt** something you already have (an existing resource group,
 VNet, gateway, cluster or storage account). Adopted resources are read, never modified. So the same code
@@ -12,8 +12,8 @@ serves a greenfield subscription and one with an established platform.
 
 You can use this repository on its own. DuploCloud's managed deployment tooling also uses this repository and
 pins tagged releases. It follows the same layout, inputs and output names as the AWS and Google Cloud versions,
-[`terraform-aws-helpdesk`](https://github.com/duplocloud/terraform-aws-helpdesk) and
-[`terraform-google-helpdesk`](https://github.com/duplocloud/terraform-google-helpdesk).
+[`duplo-ai-aws-terraform`](https://github.com/duplocloud/duplo-ai-aws-terraform) and
+[`duplo-ai-gcp-terraform`](https://github.com/duplocloud/duplo-ai-gcp-terraform).
 
 ## Layout
 
@@ -27,7 +27,7 @@ modules/
   files/      storage layer      Premium Azure Files NFS share behind a private endpoint
   dns/        dns layer          A records in an existing Azure DNS zone
   addons/     addons layer       storage classes
-  helpdesk/   helpdesk layer     namespace, static NFS volume, the Helpdesk Helm release
+  helpdesk/   helpdesk layer     namespace, static NFS volume, the DuploCloud AI Helm release
 ```
 
 The `resource_group` layer is a single resource in the platform root.
@@ -49,16 +49,16 @@ from the platform state with `terraform_remote_state`.
   `ARM_CLIENT_SECRET`, `ARM_TENANT_ID` (then set `kube_login = "spn"` in the app root).
 - A storage account with a blob container for state; your identity needs Storage Blob Data Contributor
   on it.
-- A TLS certificate as a PFX (full chain plus private key) covering both Helpdesk hostnames.
-- A DuploCloud Helpdesk license token (passed as `secrets.licensing_token`).
+- A TLS certificate as a PFX (full chain plus private key) covering both DuploCloud AI hostnames.
+- A DuploCloud AI license token (passed as `secrets.licensing_token`).
 - A Claude deployment in [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/) (formerly Azure AI
   Foundry): its Anthropic endpoint (`https://<resource>.services.ai.azure.com/anthropic`) and key.
 
 ## Helm chart
 
-The `app` root installs the DuploCloud Helpdesk Helm chart, `oci://quay.io/duplocloud/helpdesk`, at the version
-set by `helpdesk.values.chart_version`. The chart's source is at
-[github.com/duplocloud/helm](https://github.com/duplocloud/helm).
+The `app` root installs the DuploCloud AI Helm chart, which is still published as `oci://quay.io/duplocloud/helpdesk`,
+at the version set by `helpdesk.values.chart_version`. The chart's source is at
+[github.com/duplocloud/duplo-ai-helm](https://github.com/duplocloud/duplo-ai-helm).
 
 ## Inputs
 
@@ -90,7 +90,7 @@ instantiated and the root uses `provides` instead.
 Other inputs:
 
 - `deployment` (both roots): `{ name, region, host, xterm_host, account_id }`. `host` and
-  `xterm_host` are the Helpdesk hostnames. `account_id` is the Azure subscription ID
+  `xterm_host` are the DuploCloud AI hostnames. `account_id` is the Azure subscription ID
   (the AWS and Google Cloud versions use the same name for the account or project).
 - `secrets` (platform root, sensitive map): `tls_pfx_base64` (the PFX, base64-encoded) and
   `tls_pfx_password`. Not needed when `gateway.values.key_vault_secret_id` points at a Key Vault
@@ -103,8 +103,8 @@ Other inputs:
 - `secrets` (app root, sensitive map): `local_admin_password`, `azure_api_key` (the Foundry key),
   `licensing_token`; optional `slack_app_token`, `slack_bot_token`.
 - Sign-in is the local admin only (`helpdesk.values.local_admin_email` and `secrets.local_admin_password`),
-  and the local admin is the Helpdesk super user. Google and Microsoft sign-in are not offered here; set up
-  SSO in Helpdesk after deployment. A saved `login_method` other than `local` fails the plan.
+  and the local admin is the DuploCloud AI super user. Google and Microsoft sign-in are not offered here; set up
+  SSO in DuploCloud AI after deployment. A saved `login_method` other than `local` fails the plan.
 - `kube_login` (app root): kubelogin login method, `azurecli` (default), `spn`, `workloadidentity` or
   `msi`; or `token`, where kubelogin is not used and both providers read a pre-minted Entra ID token for
   the AKS server app from the `KUBE_TOKEN` environment variable (for automation without the kubelogin
