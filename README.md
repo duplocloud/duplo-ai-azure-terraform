@@ -1,17 +1,19 @@
-# terraform-azurerm-helpdesk
+# terraform-azure-helpdesk
 
-OpenTofu / Terraform code that deploys [DuploCloud](https://duplocloud.com) **Helpdesk** into your own Azure
-subscription: a VNet with NAT egress, an Application Gateway with your TLS certificate, an AKS cluster with
-the Application Gateway Ingress Controller, an Azure Files NFS share, optional Azure DNS records, and the
-Helpdesk Helm release.
+[DuploCloud](https://duplocloud.com) Helpdesk is an AI-powered helpdesk: AI agents work support tickets alongside
+your team, with a web interface and optional Slack integration. This repository is the OpenTofu / Terraform code
+that deploys Helpdesk into your own Azure subscription: a VNet with NAT egress, an Application Gateway with your
+TLS certificate, an AKS cluster with the Application Gateway Ingress Controller, an Azure Files NFS share,
+optional Azure DNS records, and the Helpdesk Helm release.
 
 Every layer can be **created** or can **adopt** something you already have (an existing resource group,
 VNet, gateway, cluster or storage account). Adopted resources are read, never modified. So the same code
 serves a greenfield subscription and one with an established platform.
 
-This repository is used on its own, and it is also what the DuploCloud DevKit's Cloud Deployment agent
-runs. The agent pins a release of this repo and generates its setup wizard from these variables. It follows
-the same contract as [`terraform-aws-helpdesk`](https://github.com/duplocloud/terraform-aws-helpdesk).
+You can use this repository on its own. DuploCloud's managed deployment tooling also uses this repository and
+pins tagged releases. It follows the same layout, inputs and output names as the AWS and Google Cloud versions,
+[`terraform-aws-helpdesk`](https://github.com/duplocloud/terraform-aws-helpdesk) and
+[`terraform-google-helpdesk`](https://github.com/duplocloud/terraform-google-helpdesk).
 
 ## Layout
 
@@ -36,7 +38,7 @@ from the platform state with `terraform_remote_state`.
 
 ## Requirements
 
-- OpenTofu 1.10 or later. Terraform 1.10+ also works.
+- OpenTofu 1.10 or later. Terraform 1.10+ also works but is not tested here.
 - [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) and
   [kubelogin](https://azure.github.io/kubelogin/install.html). The `app` root gets its Kubernetes token
   from kubelogin, because AKS local accounts are disabled (automation without kubelogin can pass a token
@@ -48,8 +50,15 @@ from the platform state with `terraform_remote_state`.
 - A storage account with a blob container for state; your identity needs Storage Blob Data Contributor
   on it.
 - A TLS certificate as a PFX (full chain plus private key) covering both Helpdesk hostnames.
-- A [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/) Claude deployment: its Anthropic
-  endpoint (`https://<resource>.services.ai.azure.com/anthropic`) and key.
+- A DuploCloud Helpdesk license token (passed as `secrets.licensing_token`).
+- A Claude deployment in [Microsoft Foundry](https://learn.microsoft.com/azure/ai-foundry/) (formerly Azure AI
+  Foundry): its Anthropic endpoint (`https://<resource>.services.ai.azure.com/anthropic`) and key.
+
+## Helm chart
+
+The `app` root installs the DuploCloud Helpdesk Helm chart, `oci://quay.io/duplocloud/helpdesk`, at the version
+set by `helpdesk.values.chart_version`. The chart's source is at
+[github.com/duplocloud/helm](https://github.com/duplocloud/helm).
 
 ## Inputs
 
@@ -82,15 +91,15 @@ Other inputs:
 
 - `deployment` (both roots): `{ name, region, host, xterm_host, account_id }`. `host` and
   `xterm_host` are the Helpdesk hostnames. `account_id` is the Azure subscription ID
-  (the name the AWS and GCP repos use for the account or project).
+  (the AWS and Google Cloud versions use the same name for the account or project).
 - `secrets` (platform root, sensitive map): `tls_pfx_base64` (the PFX, base64-encoded) and
   `tls_pfx_password`. Not needed when `gateway.values.key_vault_secret_id` points at a Key Vault
   certificate (with `key_vault_identity_id`), or when the gateway is adopted.
 - `state` (app root): `{ bucket, region, platform_key, resource_group_name, container_name }`, where the
-  platform state lives, in the shape the AWS and GCP repos use. `bucket` is the storage account name and
-  `platform_key` the blob name; `region` is optional and unused by azurerm. `resource_group_name` and
-  `container_name` default to `duplo-helpdesk-tfstate` and `tfstate` (the names the Cloud Deployment agent
-  creates).
+  platform state lives, with the same fields as the AWS and Google Cloud modules. `bucket` is the storage
+  account name and `platform_key` the blob name; `region` is optional and unused by azurerm.
+  `resource_group_name` and `container_name` default to `duplo-helpdesk-tfstate` and `tfstate`; set them to
+  match your state storage account.
 - `secrets` (app root, sensitive map): `local_admin_password`, `azure_api_key` (the Foundry key),
   `licensing_token`; optional `slack_app_token`, `slack_bot_token`.
 - Sign-in is the local admin only (`helpdesk.values.local_admin_email` and `secrets.local_admin_password`),
@@ -101,6 +110,10 @@ Other inputs:
   the AKS server app from the `KUBE_TOKEN` environment variable (for automation without the kubelogin
   binary; the token is not saved in the plan file).
 - `common_tags` (both roots): tags for every resource.
+
+The Azure resources that the platform root creates also get two tags: `duplocloud:deployment = <deployment.name>`
+and `duplocloud:managed-by = cloud-deployment-agent`. The `managed-by` value is fixed and identifies resources
+created by this code, whoever runs it; it does not mean DuploCloud manages your subscription.
 
 Pass both `secrets` maps as `TF_VAR_secrets` so they never land in a file. The module variables
 (`modules/*/variables.tf`) are the full list of `values` each layer accepts, with descriptions and
@@ -140,7 +153,7 @@ tofu output -json dns_records
 cd ../app
 sed 's/platform.tfstate/app.tfstate/' ../platform/backend.hcl > backend.hcl
 tofu init -backend-config=backend.hcl
-export TF_VAR_secrets='{"local_admin_password":"...","azure_api_key":"..."}'
+export TF_VAR_secrets='{"licensing_token":"...","local_admin_password":"...","azure_api_key":"..."}'
 tofu plan  -var-file=../examples/greenfield/app.tfvars.json -out=app.tfplan
 tofu apply app.tfplan
 tofu output helpdesk_url
@@ -178,6 +191,8 @@ records to create when DNS is external), and the sensitive `secrets` and `genera
 - AKS local accounts are disabled; Kubernetes access is Entra ID with Azure RBAC.
 - The NFS share has no public network access and no account keys; pods reach it through a private endpoint.
 - Provider versions and checksums are pinned by the committed `.terraform.lock.hcl` in each root.
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md). Please do not open a public issue.
 
 ## Tests
 

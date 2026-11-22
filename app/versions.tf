@@ -19,9 +19,8 @@ terraform {
 
 # Kubernetes access with an Entra ID token (AKS local accounts are disabled). The endpoint and
 # CA come from the platform root's state. The token is fetched by the kubelogin exec plugin, or,
-# with kube_login = "token", read by both providers from the KUBE_TOKEN environment variable (an
-# automation that mints it itself, e.g. the DuploCloud Cloud Deployment agent, which has no
-# kubelogin binary). An environment value is not saved in the plan, so a fresh token at apply
+# with kube_login = "token", read by both providers from the KUBE_TOKEN environment variable (for
+# automation that mints the token itself and has no kubelogin binary). An environment value is not saved in the plan, so a fresh token at apply
 # time does not invalidate a saved plan the way a variable would.
 locals {
   # Microsoft's fixed application ID of the AKS Entra ID server, the same in every tenant.
