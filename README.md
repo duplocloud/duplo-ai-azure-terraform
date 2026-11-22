@@ -1,6 +1,6 @@
 # duplo-ai-azure-terraform
 
-DuploCloud AI is [DuploCloud](https://duplocloud.com)'s AI-powered helpdesk: AI agents work support tickets alongside
+DuploCloud AI is [DuploCloud](https://duplocloud.com)'s AI agent platform for DevOps: AI agents work tickets alongside
 your team, with a web interface and optional Slack integration. This repository is the OpenTofu / Terraform code
 that deploys DuploCloud AI into your own Azure subscription: a VNet with NAT egress, an Application Gateway with your
 TLS certificate, an AKS cluster with the Application Gateway Ingress Controller, an Azure Files NFS share,
