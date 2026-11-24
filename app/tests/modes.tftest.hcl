@@ -89,6 +89,14 @@ run "local_admin_and_foundry" {
     condition     = !contains(module.helpdesk.sensitive_value_labels, "secrets.licensingToken")
     error_message = "an absent licensing token should not be set"
   }
+
+  assert {
+    condition = yamldecode(module.helpdesk.rendered_values).upgrader.bootstrap == {
+      enabled = true
+      values  = { channels = { initialChannel = "hdst-stable" } }
+    }
+    error_message = "the upgrader hook is on and this install enrolls on hdst-stable"
+  }
 }
 
 run "azure_ingress_and_storage" {
