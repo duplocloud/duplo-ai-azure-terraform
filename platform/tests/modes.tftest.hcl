@@ -60,8 +60,8 @@ variables {
   common_tags = { owner = "test" }
 }
 
-# The aks module reads the AGIC identity out of a configured block, which a mock cannot fill; stand in
-# for the module in every run (tofu validate still checks it, and the other runs adopt a cluster).
+# The aks module reads the AGIC identity out of a configured block, which this mock leaves empty; stand in
+# for the module in every run (aks.tftest.hcl plans it on its own, and the other runs adopt a cluster).
 override_module {
   target = module.aks
   outputs = {

@@ -111,9 +111,15 @@ variable "node_zones" {
 }
 
 variable "node_os_sku" {
-  description = "Node OS: Ubuntu or AzureLinux3"
+  # AzureLinux3, not Ubuntu: Ubuntu 24.04 (the AKS Ubuntu image on Kubernetes 1.36) sets
+  # kernel.apparmor_restrict_unprivileged_userns=1, which denies the agent's bwrap sandbox the
+  # user namespace it runs in ("bwrap: setting up uid map: Permission denied"), and no pod
+  # setting can lift it. Azure Linux 3 has no such restriction. On an existing cluster
+  # the change is an in-place update: AKS reimages the pool's nodes onto the new OS, one surge
+  # node at a time (azurerm only rotates the pool for other OS SKUs).
+  description = "Node OS: AzureLinux3 (default) or Ubuntu. Ubuntu 24.04 nodes block the agent's shell sandbox."
   type        = string
-  default     = "Ubuntu"
+  default     = "AzureLinux3"
   nullable    = false
 }
 
