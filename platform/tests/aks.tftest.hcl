@@ -1,4 +1,6 @@
-# Mock-only: the AKS module on its own, which modes.tftest.hcl overrides as a whole.
+# Mock-only: the AKS module on its own, which modes.tftest.hcl overrides as a whole. The cluster mock
+# fills the computed AGIC identity and kube_config the module reads at plan time; the provider's mock
+# expects a configured block's override as an object.
 mock_provider "azurerm" {
   mock_resource "azurerm_user_assigned_identity" {
     defaults = { id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/acme-id" }
