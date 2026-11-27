@@ -71,6 +71,7 @@ override_module {
     cluster_ca_certificate = "Q0E="
     oidc_issuer_url        = "https://westus2.oic.prod-aks.azure.com/tenant/issuer/"
     node_resource_group    = "acme-rg-aks-nodes"
+    agic_restart_key       = "2026-11-27T00:00:00Z"
   }
 }
 
@@ -100,6 +101,11 @@ run "greenfield" {
   assert {
     condition     = output.cluster_name == "acme-aks" && output.dns_mode == "azure_dns"
     error_message = "cluster and dns outputs should resolve"
+  }
+
+  assert {
+    condition     = output.agic_restart_key == "2026-11-27T00:00:00Z"
+    error_message = "a created cluster should pass the AGIC restart key through"
   }
 }
 
@@ -169,6 +175,11 @@ run "existing_everything" {
   assert {
     condition     = output.dns_records == [{ name = "helpdesk.example.com", type = "A", value = "20.0.0.2" }, { name = "xterm.example.com", type = "A", value = "20.0.0.2" }]
     error_message = "dns_records should list A records for both hosts"
+  }
+
+  assert {
+    condition     = output.agic_restart_key == ""
+    error_message = "an adopted cluster has no AGIC role assignments to wait for, so no restart key"
   }
 }
 

@@ -162,6 +162,21 @@ resource "azurerm_role_assignment" "agic_gateway_identity" {
   skip_service_principal_aad_check = true
 }
 
+# The AGIC pod starts with the cluster, before the role assignments above exist, and Entra ID takes
+# a few minutes to propagate them. Wait here so the app root (which restarts AGIC once, keyed on
+# agic_restart_key) never starts against a gateway AGIC cannot read yet. Keyed on the assignment IDs,
+# so a platform apply that leaves them unchanged does not wait again.
+resource "time_sleep" "agic_role_propagation" {
+  create_duration = "5m"
+
+  triggers = {
+    gateway          = azurerm_role_assignment.agic_gateway.id
+    resource_group   = azurerm_role_assignment.agic_resource_group.id
+    subnet           = azurerm_role_assignment.agic_subnet.id
+    gateway_identity = try(azurerm_role_assignment.agic_gateway_identity[0].id, "")
+  }
+}
+
 # ── Kubernetes access ─────────────────────────────────────────────────────────
 resource "azurerm_role_assignment" "cluster_admin" {
   for_each = local.cluster_admins
