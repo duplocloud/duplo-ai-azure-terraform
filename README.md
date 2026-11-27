@@ -81,7 +81,7 @@ instantiated and the root uses `provides` instead.
 | `resource_group` | platform | `create`, `existing` | `name` |
 | `network` | platform | `create`, `existing` | `vpc_id` (the VNet ID), `aks_subnet_id`, `app_gateway_subnet_id`, `private_endpoint_subnet_id`, optional `nat_public_ip` |
 | `gateway` | platform | `create`, `existing` | `app_gateway_id`, `public_ip`, `ssl_certificate_name`, optional `identity_id` |
-| `cluster` | platform | `create`, `existing` (must already run AGIC for the gateway, and Linux nodes that are not Ubuntu 24.04: see Node OS) | `cluster_name`, `cluster_id`, `cluster_endpoint`, `cluster_ca_certificate`, optional `oidc_issuer_url` |
+| `cluster` | platform | `create`, `existing` (must already run AGIC for the gateway, and Azure Linux nodes, not Ubuntu 24.04: see Node OS) | `cluster_name`, `cluster_id`, `cluster_endpoint`, `cluster_ca_certificate`, optional `oidc_issuer_url` |
 | `storage` | platform | `create`, `existing` | `account_name`, `resource_group_name`, `backend_share_name`, optional `backend_share_gib` |
 | `dns` | platform | `azure_dns` (A records in an existing zone: `values.zone_name`, `values.zone_resource_group_name`), `external` (you create the records) | none |
 | `addons` | app | `create`, `existing` | none |
@@ -181,12 +181,12 @@ records to create when DNS is external), and the sensitive `secrets` and `genera
   before the app root.
 - **Foundry with network restrictions**: allow the `nat_public_ip` output.
 - **Node OS**: a cluster this code creates runs Azure Linux 3 (`cluster.values.node_os_sku`). Ubuntu 24.04
-  nodes deny the agent's shell sandbox a user namespace, so every command a ticket runs fails with
-  `bwrap: setting up uid map: Permission denied`; an adopted (`existing`) cluster needs Azure Linux nodes too.
-  A cluster created with an older release keeps Ubuntu until you next apply the platform root, which updates
-  the node pool in place: AKS reimages the nodes onto Azure Linux one at a time, interrupting running tickets.
-  Apply when none are running, or set `cluster.values.node_os_sku = "Ubuntu"` to wait for a window (the agent's
-  shell commands keep failing until you switch).
+  nodes deny the agent's shell sandbox a user namespace, so every command a ticket runs fails with `bwrap:
+  setting up uid map: Permission denied`; an adopted (`existing`) cluster needs Azure Linux nodes, not
+  Ubuntu 24.04, too. A cluster created with an older release keeps Ubuntu until you next apply the
+  platform root, which updates the node pool in place: AKS reimages the nodes onto Azure Linux one at a
+  time, interrupting running tickets. Apply when none are running, or set `cluster.values.node_os_sku =
+  "Ubuntu"` to wait for a window (the agent's shell commands keep failing until you switch).
 
 ## Security
 
