@@ -47,9 +47,10 @@ resource "random_password" "mongodb_root_password" {
 
 # AGIC (the AKS add-on) starts before the platform root grants it access to the gateway, and gives up
 # in CrashLoopBackOff on the 403s. The platform waits for those role assignments to propagate and
-# exports agic_restart_key; restart AGIC once per key (a `kubectl rollout restart`) so it comes up
-# with working access before the Helpdesk ingress needs it. No key (adopted cluster, or no platform
-# state while destroying): leave AGIC alone.
+# exports agic_restart_key; a pod template annotation carrying the key restarts AGIC once per key
+# (like `kubectl rollout restart`, under a key of our own so a manual restart does not show up as
+# drift) so it comes up with working access before the Helpdesk ingress needs it. No key (adopted
+# cluster, or no platform state while destroying): leave AGIC alone.
 resource "kubernetes_annotations" "agic_restart" {
   count = local.platform.agic_restart_key == "" ? 0 : 1
 
@@ -60,9 +61,9 @@ resource "kubernetes_annotations" "agic_restart" {
     namespace = "kube-system"
   }
   template_annotations = {
-    "kubectl.kubernetes.io/restartedAt" = local.platform.agic_restart_key
+    "duplocloud.net/agic-roles-propagated" = local.platform.agic_restart_key
   }
-  # AKS's add-on manager owns the deployment.
+  # Take the field over if another field manager ever set it.
   force = true
 }
 

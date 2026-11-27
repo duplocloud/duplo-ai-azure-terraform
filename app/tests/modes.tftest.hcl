@@ -57,7 +57,7 @@ run "local_admin_and_foundry" {
   command = apply
 
   assert {
-    condition     = length(kubernetes_annotations.agic_restart) == 1 && kubernetes_annotations.agic_restart[0].template_annotations["kubectl.kubernetes.io/restartedAt"] == "2026-11-27T00:00:00Z"
+    condition     = length(kubernetes_annotations.agic_restart) == 1 && kubernetes_annotations.agic_restart[0].template_annotations["duplocloud.net/agic-roles-propagated"] == "2026-11-27T00:00:00Z"
     error_message = "AGIC should be restarted once, keyed on the platform's agic_restart_key"
   }
 
