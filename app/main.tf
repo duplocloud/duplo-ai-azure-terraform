@@ -26,6 +26,7 @@ locals {
     backend_share_name          = try(local.platform_outputs.backend_share_name, "backend")
     backend_share_gib           = try(local.platform_outputs.backend_share_gib, 100)
     dns_mode                    = try(local.platform_outputs.dns_mode, "")
+    agic_restart_key            = try(local.platform_outputs.agic_restart_key, "")
   }
 
   create_addons = var.addons.mode == "create"
@@ -42,6 +43,27 @@ resource "random_password" "jwt_shared_secret" {
 resource "random_password" "mongodb_root_password" {
   length  = 32
   special = false
+}
+
+# AGIC (the AKS add-on) starts before the platform root grants it access to the gateway, and gives up
+# in CrashLoopBackOff on the 403s. The platform waits for those role assignments to propagate and
+# exports agic_restart_key; restart AGIC once per key (a `kubectl rollout restart`) so it comes up
+# with working access before the Helpdesk ingress needs it. No key (adopted cluster, or no platform
+# state while destroying): leave AGIC alone.
+resource "kubernetes_annotations" "agic_restart" {
+  count = local.platform.agic_restart_key == "" ? 0 : 1
+
+  api_version = "apps/v1"
+  kind        = "Deployment"
+  metadata {
+    name      = "ingress-appgw-deployment"
+    namespace = "kube-system"
+  }
+  template_annotations = {
+    "kubectl.kubernetes.io/restartedAt" = local.platform.agic_restart_key
+  }
+  # AKS's add-on manager owns the deployment.
+  force = true
 }
 
 module "addons" {
@@ -88,6 +110,6 @@ module "helpdesk" {
   slack_helpdesk_default_workspace = try(var.helpdesk.values.slack_helpdesk_default_workspace, null)
   slack_app_portals                = try(var.helpdesk.values.slack_app_portals, null)
 
-  # The backup storage class must exist first.
-  depends_on = [module.addons]
+  # The backup storage class must exist first, and AGIC must be running with access to the gateway.
+  depends_on = [module.addons, kubernetes_annotations.agic_restart]
 }
