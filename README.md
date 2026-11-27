@@ -180,6 +180,11 @@ records to create when DNS is external), and the sensitive `secrets` and `genera
 - **Your IP changed**: update `cluster.values.api_authorized_ip_ranges` and apply the platform root
   before the app root.
 - **Foundry with network restrictions**: allow the `nat_public_ip` output.
+- **Node OS**: nodes run Azure Linux 3 (`cluster.values.node_os_sku`). Ubuntu 24.04 nodes deny the agent's
+  shell sandbox a user namespace, so every command a ticket runs fails with
+  `bwrap: setting up uid map: Permission denied`. A cluster created before this default keeps Ubuntu until
+  you next apply the platform root, which updates the node pool in place: AKS reimages the nodes onto Azure Linux one
+  at a time, so running tickets are interrupted. Apply when none are running.
 
 ## Security
 
