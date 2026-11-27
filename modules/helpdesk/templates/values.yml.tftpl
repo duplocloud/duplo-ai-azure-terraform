@@ -104,6 +104,12 @@ duploAgent:
     accessModes:
       - ReadWriteMany
     size: ${backend_size}
+  # AKS nodes (Azure Linux and Ubuntu) run AppArmor, and containerd's default profile denies the
+  # mounts the agent's bwrap sandbox makes ("bwrap: Failed to make / slave: Permission denied").
+  # Helm merges this into the chart's securityContext, keeping its capabilities and seccomp.
+  securityContext:
+    appArmorProfile:
+      type: Unconfined
 helpdeskMcp:
   enabled: ${helpdesk_mcp_enabled}
 # The chart leaves the upgrader hook off, and a hook that runs without a channel enrolls on hd-stable.

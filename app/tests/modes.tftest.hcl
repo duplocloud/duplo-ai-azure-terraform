@@ -108,6 +108,11 @@ run "local_admin_and_foundry" {
     }
     error_message = "the upgrader hook is on and this install enrolls on hdst-stable"
   }
+
+  assert {
+    condition     = yamldecode(module.helpdesk.rendered_values).duploAgent.securityContext == { appArmorProfile = { type = "Unconfined" } }
+    error_message = "the agent container runs AppArmor-unconfined so its bwrap sandbox can mount"
+  }
 }
 
 run "azure_ingress_and_storage" {
