@@ -148,8 +148,8 @@ tofu apply platform.tfplan
 # 2. if dns mode is "external": point both hostnames at the gateway (A records)
 tofu output -json dns_records
 
-# 3. app (wait ~5 minutes after the platform apply: the ingress controller's role
-#    assignments need time to propagate)
+# 3. app (can run right after the platform apply: the platform waits ~5 minutes for the
+#    ingress controller's role assignments to propagate, and the app restarts it once)
 cd ../app
 sed 's/platform.tfstate/app.tfstate/' ../platform/backend.hcl > backend.hcl
 tofu init -backend-config=backend.hcl

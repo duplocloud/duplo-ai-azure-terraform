@@ -43,3 +43,37 @@ run "aks_node_os_defaults_to_azure_linux" {
     error_message = "nodes default to Azure Linux 3: Ubuntu 24.04 denies the agent's bwrap sandbox a user namespace"
   }
 }
+
+run "aks_waits_for_agic_role_propagation" {
+  command = plan
+
+  module {
+    source = "../modules/aks"
+  }
+
+  variables {
+    cluster_name          = "acme-aks"
+    location              = "westus2"
+    resource_group_name   = "acme-rg"
+    resource_group_id     = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg"
+    vnet_id               = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/virtualNetworks/acme-vnet"
+    aks_subnet_id         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/virtualNetworks/acme-vnet/subnets/snet-aks-nodes"
+    app_gateway_id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/applicationGateways/acme-appgw"
+    app_gateway_subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/acme-rg/providers/Microsoft.Network/virtualNetworks/acme-vnet/subnets/snet-appgw"
+  }
+
+  assert {
+    condition     = time_sleep.agic_role_propagation.create_duration == "5m"
+    error_message = "the platform waits 5 minutes for the AGIC role assignments to propagate before the app root restarts AGIC"
+  }
+
+  assert {
+    condition     = toset(keys(time_sleep.agic_role_propagation.triggers)) == toset(["gateway", "resource_group", "subnet", "gateway_identity"])
+    error_message = "the wait is keyed on every AGIC role assignment, so it waits again whenever one is recreated"
+  }
+
+  assert {
+    condition     = time_sleep.agic_role_propagation.triggers["gateway_identity"] == ""
+    error_message = "with no gateway identity there is no Managed Identity Operator assignment to wait for"
+  }
+}

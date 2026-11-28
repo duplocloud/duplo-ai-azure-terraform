@@ -29,3 +29,8 @@ output "node_resource_group" {
   description = "Resource group AKS manages for the node resources"
   value       = azurerm_kubernetes_cluster.this.node_resource_group
 }
+
+output "agic_restart_key" {
+  description = "Changes whenever the AGIC role assignments are (re)created, after they have had time to propagate; the app root restarts AGIC when it changes"
+  value       = time_sleep.agic_role_propagation.id
+}

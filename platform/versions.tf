@@ -6,6 +6,12 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.30"
     }
+    # Used by modules/aks (waits for the AGIC role assignments to propagate); the root supplies it.
+    # tflint-ignore: terraform_unused_required_providers
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.12"
+    }
     # Used by modules/files (the storage account name suffix); the root supplies it.
     # tflint-ignore: terraform_unused_required_providers
     random = {

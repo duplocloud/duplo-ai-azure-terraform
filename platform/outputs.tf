@@ -53,6 +53,11 @@ output "cluster_name" {
   value       = local.aks_cluster_name
 }
 
+output "agic_restart_key" {
+  description = "Changes after the AGIC role assignments are created and have propagated (empty for an adopted cluster); the app root restarts AGIC when it changes"
+  value       = try(module.aks[0].agic_restart_key, "")
+}
+
 output "cluster_id" {
   description = "AKS cluster resource ID"
   value       = local.cluster_id

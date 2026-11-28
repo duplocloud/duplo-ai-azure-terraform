@@ -19,6 +19,7 @@ override_data {
       backend_share_name          = "backend"
       backend_share_gib           = 200
       dns_mode                    = "external"
+      agic_restart_key            = "2026-11-27T00:00:00Z"
     }
   }
 }
@@ -54,6 +55,16 @@ variables {
 
 run "local_admin_and_foundry" {
   command = apply
+
+  assert {
+    condition     = length(kubernetes_annotations.agic_restart) == 1 && kubernetes_annotations.agic_restart[0].template_annotations["duplocloud.net/agic-roles-propagated"] == "2026-11-27T00:00:00Z"
+    error_message = "AGIC should be restarted once, keyed on the platform's agic_restart_key"
+  }
+
+  assert {
+    condition     = kubernetes_annotations.agic_restart[0].metadata[0].namespace == "kube-system" && kubernetes_annotations.agic_restart[0].metadata[0].name == "ingress-appgw-deployment" && kubernetes_annotations.agic_restart[0].kind == "Deployment"
+    error_message = "the restart should target the AKS AGIC add-on deployment"
+  }
 
   assert {
     condition     = length(module.addons) == 1
@@ -287,5 +298,10 @@ run "plans_without_platform_outputs" {
   assert {
     condition     = length(output.dns_records) == 0
     error_message = "with no platform state the app root should still plan (for destroy)"
+  }
+
+  assert {
+    condition     = length(kubernetes_annotations.agic_restart) == 0
+    error_message = "no restart key (adopted cluster, or no platform state) means no AGIC restart"
   }
 }
